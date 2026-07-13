@@ -1,0 +1,5 @@
+---
+# Structurally valid Ansible YAML with an inline vault tag.
+validation_vault_token: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  6638646538646538663864653864653866386465386465386465386465386465

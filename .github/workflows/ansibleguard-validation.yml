@@ -1,0 +1,75 @@
+name: AnsibleGuard SARIF validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned AnsibleGuard
+        run: >-
+          pip install
+          "ansibleguard @ git+https://github.com/JedidiAymen/AnsibleChecklist.git@9553aec"
+
+      - name: Install pinned GitLeaks
+        run: ansibleguard install-tools
+
+      - name: Run controlled scan
+        run: ansibleguard . -o ansibleguard-output --fail-on never
+
+      - name: Publish job summary
+        if: always() && hashFiles('ansibleguard-output/summary.csv') != ''
+        run: |
+          echo '## AnsibleGuard controlled validation' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo '```csv' >> "$GITHUB_STEP_SUMMARY"
+          head -n 25 ansibleguard-output/summary.csv >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('ansibleguard-output/findings.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ansibleguard-output/findings.sarif
+          category: ansibleguard-controlled-validation
+
+      - name: Upload complete AnsibleGuard reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ansibleguard-controlled-results
+          path: ansibleguard-output/
+
+      - name: Enforce controlled error policy
+        run: |
+          python - <<'PY'
+          import json
+          import sys
+
+          findings = json.load(open("ansibleguard-output/findings.json"))
+          diagnostics = json.load(open("ansibleguard-output/diagnostics.json"))
+          errors = [item for item in findings if item["severity"] == "error"]
+          tool_errors = [
+              item for item in diagnostics if item["status"] == "tool-error"
+          ]
+          print(
+              f"Controlled result: {len(errors)} error finding(s), "
+              f"{len(tool_errors)} tool error(s)"
+          )
+          if errors or tool_errors:
+              sys.exit(1)
+          PY

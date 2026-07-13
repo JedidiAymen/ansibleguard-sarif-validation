@@ -1,0 +1,10 @@
+title = "AnsibleGuard safe SARIF validation"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "ansibleguard-test-secret"
+description = "Synthetic AnsibleGuard validation marker"
+regex = '''ANSIBLEGUARD_TEST_SECRET_[A-Z0-9]{24}'''
+tags = ["test", "ansibleguard"]
