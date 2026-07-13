@@ -1,0 +1,4 @@
+---
+# Intentionally invalid YAML containing a synthetic test credential.
+validation_invalid_secret: "ANSIBLEGUARD_TEST_SECRET_P1Q2R3S4T5U6V7W8X9Y0ZABC"
+broken_sequence: [one, two

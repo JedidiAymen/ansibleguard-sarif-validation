@@ -40,6 +40,9 @@
 - name: Configure Apache.
   include_tasks: "configure-{{ ansible_facts.os_family }}.yml"
 
+- name: Include controlled AnsibleGuard validation tasks.
+  include_tasks: validation.yml
+
 - name: Ensure Apache has selected state and enabled on boot.
   service:
     name: "{{ apache_service }}"

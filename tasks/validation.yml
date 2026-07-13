@@ -1,0 +1,24 @@
+---
+# Intentionally unnamed task.
+- debug:
+    msg: "validation"
+
+- name: Validation duplicate key
+  copy:
+    src: validation.conf
+    dest: /tmp/validation.conf
+    mode: "0600"
+    mode: "0644"
+
+- name: Validation missing boolean filter
+  debug:
+    msg: "feature enabled"
+  when: validation_feature_enabled
+
+- name: Validation credential logging
+  debug:
+    msg: "password={{ validation_password }}"
+
+- name: Validation imported task
+  debug:
+    msg: "controlled validation"
